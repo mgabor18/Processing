@@ -1,0 +1,101 @@
+//n = 4 + x*3 (x = 0, 1, 2, 3,...) => x+1 db Bézier ív rajzolódik
+int x = 3, 
+  n = 4 + x*3, 
+  d = n+5, 
+  r = 8;
+PVector[] points = new PVector[n];
+
+void setup() {
+  size(1000, 700);
+  background(0);
+  for (int i = 0; i < n; i++) {
+    //elsőrendű folytonosság
+    if (3 < i && i < n-1 && (i-4) % 3 == 0) {
+      PVector num = new PVector(points[i-1].x-points[i-2].x, points[i-1].y-points[i-2].y);
+      points[i] = new PVector(points[i-1].x+num.x, points[i-1].y+num.y);
+      i++;
+    }
+    points[i] = new PVector(random(200, 800), random(200, 500));
+  }
+}
+
+
+void draw() {
+  background(0);
+
+  //pont összekötő vonalak
+  strokeWeight(0.5);
+  stroke(255, 100, 150);
+  for (int i = 0; i < n-1; i++) {
+    line(points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+  }
+
+  //Bézier ív(ek)
+  strokeWeight(3);
+  noFill();
+  for (int i = 0; i < n-3; i+=3) {
+    stroke(255);
+    strokeWeight(3);
+    noFill();
+    drawBezier(points[i].x, points[i].y, points[i+1].x, points[i+1].y, 
+      points[i+2].x, points[i+2].y, points[i+3].x, points[i+3].y);
+
+    //fő pontok
+    noStroke();
+    fill(100, 255, 150);
+    circle(points[i].x, points[i].y, r);
+    circle(points[i+3].x, points[i+3].y, r);
+
+    //köztes pontok
+    fill(100);
+    circle(points[i+1].x, points[i+1].y, r);
+    circle(points[i+2].x, points[i+2].y, r);
+  }
+}
+
+void drawBezier(float x1, float x2, float y1, float y2, float z1, float z2, float w1, float w2) {
+  float t, xX, yY;
+  beginShape();
+  for (t = 0; t < 1; t+=0.01) {
+    xX = x1 * pow(1-t, 3) + 
+      y1 * (3*pow(1-t, 2)) * t +
+      z1 * (3*(1-t)*pow(t, 2))+
+      w1 * pow(t, 3);
+    yY = x2 * pow(1-t, 3) + 
+      y2 * (3*pow(1-t, 2)) * t +
+      z2 * (3*(1-t)*pow(t, 2))+
+      w2 * pow(t, 3);
+
+    vertex(xX, yY);
+  }
+  t = 1; // a biztos utolsó pontért
+  xX = x1 * pow(1-t, 3) + 
+    y1 * (3*pow(1-t, 2)) * t +
+    z1 * (3*(1-t)*pow(t, 2))+
+    w1 * pow(t, 3);
+  yY = x2 * pow(1-t, 3) + 
+    y2 * (3*pow(1-t, 2)) * t +
+    z2 * (3*(1-t)*pow(t, 2))+
+    w2 * pow(t, 3);
+  vertex(xX, yY);
+  endShape();
+}
+
+void mousePressed() {
+  for (int i = 0; i < n; i++) {
+    if (sqrt(pow(mouseX-points[i].x, 2) + pow(mouseY-points[i].y, 2)) < r/2) {
+      d = i;
+    }
+  }
+}
+
+void mouseDragged() {
+  if (d >= 0 && d < n) {
+    points[d].x = mouseX;
+    points[d].y = mouseY;
+  }
+}
+
+void mouseReleased() {
+  d = n+5;
+}
